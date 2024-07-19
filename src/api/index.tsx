@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_KEY = "42590893-ce38a55ef102ab89553f50724";
 
-const apiUrl = `https://pixabay.com/api/?key=${API_KEY}`;
+const apiUrl = `https://pixabay.com/api/?key=42590893-ce38a55ef102ab89553f50724&per_page=25&safesearch=true&editors_choice=true`;
 
 const formatUrl = (params: any) => {
   let url = apiUrl + "&per_page=25&safesearch=true&editors_choice=true";

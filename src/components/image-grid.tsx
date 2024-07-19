@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { MasonryFlashList } from "@shopify/flash-list";
 import ImageCard from "./image-card";
-import { getColumnCount, wp } from "@/helpers/common";
+import { getColumnCount, wp } from "../helpers/common";
 const ImageGrid = ({ images, router }: { images: any; router: any }) => {
   const columns = getColumnCount();
   return (

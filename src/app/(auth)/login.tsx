@@ -12,41 +12,35 @@ import Svg, { ClipPath, Ellipse, Image } from "react-native-svg";
 import Animated, {
   FadeInDown,
   interpolate,
-  runOnJS,
   useAnimatedKeyboard,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
-
+import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { LinearGradient } from "expo-linear-gradient";
-import { hp, wp } from "@/helpers/common";
-import { theme } from "@/constants/theme";
-import { ILoginForm, LoginForm } from "@/components/auth/login-form";
-import { useForm } from "react-hook-form";
-import { UserApi } from "@/apis";
-import { useDispatch } from "react-redux";
-import { authLogin } from "@/store/auth-slice";
+import { ILoginForm, LoginForm } from "@/src/components/auth/login-form";
+import { hp, wp } from "@/src/helpers/common";
+import { theme } from "@/src/constants/theme";
+import { UserApi } from "@/src/apis";
+import { authLogin } from "@/src/store/auth-slice";
+
 const { width, height } = Dimensions.get("window");
 
-const WelcomeScreen = () => {
+const LoginScreen = () => {
   const imagePosition = useSharedValue(1);
   const opacity = useSharedValue(1);
-  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-
+  const dispatch = useDispatch();
   const {
-    handleSubmit,
+    handleSubmit: handleLogin,
     control: loginControl,
     setError: setLoginError,
-    formState: { errors },
-    watch,
   } = useForm<ILoginForm>();
-  console.log(errors);
+
   const imageAnimatedStyle = useAnimatedStyle(() => {
     const interpolation = interpolate(
       imagePosition.value,
@@ -98,12 +92,6 @@ const WelcomeScreen = () => {
     };
   });
 
-  const animatedOpacity = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  });
-
   const loginHandler = useCallback(() => {
     imagePosition.value = 0;
     opacity.value = withTiming(0, { duration: 500 });
@@ -114,26 +102,33 @@ const WelcomeScreen = () => {
     imagePosition.value = 1;
   }, []);
 
-  const onLogin = useCallback(async (data: ILoginForm) => {
-    setLoading(true);
-    console.log("object");
-    const createData = {
-      username: data.username,
-      password: data.password,
+  const onLogin = useCallback(
+    async (data: ILoginForm) => {
+      setLoading(true);
+      const createData = {
+        username: data.username,
+        password: data.password,
+      };
+
+      try {
+        const res = await UserApi.login(createData);
+        dispatch(authLogin(res));
+      } catch (err: any) {
+        setLoginError("username", {
+          message: err.error.message,
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [dispatch, setLoginError]
+  );
+
+  const animatedOpacity = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
     };
-    try {
-      const res = await UserApi.login(createData);
-      console.log(res, "res");
-      dispatch(authLogin(res));
-      setLoading(false);
-    } catch (err: any) {
-      console.log(err, "err");
-      setLoginError("username", {
-        message: err.error.message,
-      });
-      setLoading(false);
-    }
-  }, []);
+  });
 
   return (
     <ScrollView
@@ -150,9 +145,9 @@ const WelcomeScreen = () => {
             <Image
               clipPath="url(#clipPathId)"
               height={height + 100}
-              href={require("../assets/images/nomi.jpg")}
+              href={require("../../assets/images/nomi.jpg")}
               preserveAspectRatio="xMidYMid slice"
-              width={width + 100}
+              width={width}
             />
           </Svg>
           <Animated.View style={animatedOpacity}>
@@ -173,12 +168,11 @@ const WelcomeScreen = () => {
               end={{ x: 0.5, y: 0.8 }}
             />
           </Animated.View>
-
           <TouchableOpacity onPress={onCloseHandler}>
             <Animated.View
               style={[styles.closeButtonContainer, closeButtonContainerStyle]}
             >
-              <AntDesign color={"black"} name="closecircleo" size={24} />
+              <AntDesign color={theme.colors.white} name="close" size={24} />
             </Animated.View>
           </TouchableOpacity>
         </Animated.View>
@@ -206,9 +200,12 @@ const WelcomeScreen = () => {
           </Animated.View>
           <Animated.View style={[styles.formInputContainer, formAnimatedStyle]}>
             <LoginForm control={loginControl} />
-            <Pressable style={styles.endButton} onPress={handleSubmit(onLogin)}>
-              <Text style={styles.startText}>Нэвтрэх</Text>
-            </Pressable>
+            <TouchableOpacity
+              onPress={handleLogin(onLogin)}
+              style={styles.formButton}
+            >
+              <Text style={styles.formTitle}>Нэвтрэх</Text>
+            </TouchableOpacity>
           </Animated.View>
         </Animated.View>
       </Animated.View>
@@ -216,7 +213,7 @@ const WelcomeScreen = () => {
   );
 };
 
-export default WelcomeScreen;
+export default LoginScreen;
 
 const styles = StyleSheet.create({
   root: {
@@ -225,33 +222,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-end",
+    backgroundColor: theme.colors.white,
   },
-  button: {
-    backgroundColor: "red",
-    height: 55,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 35,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "blue",
-  },
-  buttonText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "red",
-    letterSpacing: 0.5,
-  },
+
   bottomContainer: {
     justifyContent: "center",
     height: height / 3,
   },
-
   formButton: {
     marginHorizontal: 20,
-    // borderColor     : Colors.white,
-    // shadowColor     : Colors.black,
+    borderColor: "blue",
+    shadowColor: theme.colors.black,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -259,6 +240,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    borderRadius: theme.radius.xl,
+    borderCurve: "continuous",
+    backgroundColor: theme.colors.black,
+    padding: 15,
   },
   formInputContainer: {
     marginBottom: 70,
@@ -280,7 +265,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.34,
     shadowRadius: 6.27,
     elevation: 1,
-    backgroundColor: "blue",
+    backgroundColor: theme.colors.black,
     borderRadius: 20,
     top: -20,
   },
@@ -290,15 +275,17 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   title: {
-    fontSize: hp(7),
+    fontSize: hp(5),
     color: theme.colors.neutral(0.9),
     fontWeight: "700",
+    textAlign: "center",
   },
   punchline: {
     fontSize: hp(2),
     letterSpacing: 1,
     marginBottom: 10,
     fontWeight: "500",
+    textAlign: "center",
   },
   startButton: {
     marginBottom: 50,
@@ -315,19 +302,11 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: "center",
   },
-  loginButton: {
-    backgroundColor: theme.colors.neutral(0.9),
-    padding: 15,
-    paddingHorizontal: 90,
-    borderRadius: theme.radius.xl,
-    borderCurve: "continuous",
-  },
-  endButton: {
-    backgroundColor: theme.colors.neutral(0.9),
-    padding: 15,
-    paddingHorizontal: 90,
-    borderRadius: theme.radius.xl,
-    borderCurve: "continuous",
-    zIndex: 1000000,
+  formTitle: {
+    fontSize: hp(2.5),
+    fontWeight: "500",
+    letterSpacing: 1,
+    textAlign: "center",
+    color: theme.colors.white,
   },
 });

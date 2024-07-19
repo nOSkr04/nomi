@@ -1,57 +1,48 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { theme } from "@/constants/theme";
-import { hp, wp } from "@/helpers/common";
-import Categories from "@/components/categories";
-import { apiCall } from "@/api";
-import ImageGrid from "@/components/image-grid";
-import FiltersModal from "@/components/filters-modal";
 import { useRouter } from "expo-router";
-const HomeScreen = () => {
+import { apiCall } from "@/src/api";
+import Categories from "@/src/components/categories";
+import ImageGrid from "@/src/components/image-grid";
+import { hp, wp } from "@/src/helpers/common";
+import { theme } from "@/src/constants/theme";
+import { SimpleLineIcons } from "@expo/vector-icons";
+import { UserApi } from "@/src/apis";
+import { useDispatch } from "react-redux";
+import { authLogout } from "@/src/store/auth-slice";
+import { useSWRConfig } from "swr";
+const ContentScreen = () => {
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
-  const [images, setImages] = useState([]);
-  const [activeCategory, setActiveCategory] = useState<null | string>(null);
-  const modalRef = useRef(null);
   const scrollRef = useRef<ScrollView>(null);
   const router = useRouter();
-  const handleChangeCategory = (cat: string | null) => {
-    setActiveCategory(cat);
-    setImages([]);
-    let params = {
-      page: 1,
-    };
-    if (cat) {
-      params["category"] = cat;
-    }
-    fetchImages(params, false);
-  };
-
-  const fetchImages = async (params = { page: 1 }, append = true) => {
-    let res = await apiCall(params);
-    if (res.success && res?.data?.hits) {
-      if (append) {
-        setImages([...images, ...res?.data?.hits]);
-      } else {
-        setImages([...res?.data?.hits]);
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchImages();
-  }, []);
+  const dispatch = useDispatch();
+  const { mutate } = useSWRConfig();
+  const handleChangeCategory = (cat: string | null) => {};
 
   const handleScrollUp = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   };
+
+  const onLogout = useCallback(async () => {
+    try {
+      await UserApi.logout();
+      dispatch(authLogout());
+      mutate("swr.user.me", null, false);
+    } catch (err: any) {
+      console.log(err);
+    }
+  }, [dispatch, mutate]);
 
   return (
     <View style={[styles.container, { paddingTop }]}>
       <View style={styles.header}>
         <Pressable onPress={handleScrollUp}>
           <Text style={styles.title}>💖Номи💖</Text>
+        </Pressable>
+        <Pressable onPress={onLogout}>
+          <SimpleLineIcons name="logout" size={hp(4)} />
         </Pressable>
       </View>
       <ScrollView
@@ -62,19 +53,18 @@ const HomeScreen = () => {
         <View style={styles.categories}>
           <Categories
             handleChangeCategory={handleChangeCategory}
-            activeCategory={activeCategory}
+            // activeCategory={activeCategory}
           />
         </View>
         <View>
-          {images?.length > 0 && <ImageGrid images={images} router={router} />}
+          {/* {images?.length > 0 && <ImageGrid images={images} router={router} />} */}
         </View>
       </ScrollView>
-      <FiltersModal modalRef={modalRef} />
     </View>
   );
 };
 
-export default HomeScreen;
+export default ContentScreen;
 
 const styles = StyleSheet.create({
   container: {

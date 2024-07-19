@@ -1,9 +1,9 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { data } from "@/constants/data";
-import { hp, wp } from "@/helpers/common";
-import { theme } from "@/constants/theme";
 import Animated, { FadeInRight } from "react-native-reanimated";
+import { data } from "../constants/data";
+import { theme } from "../constants/theme";
+import { hp, wp } from "../helpers/common";
 
 type Props = {
   handleChangeCategory: (cat: string | null) => void; // Updated type here

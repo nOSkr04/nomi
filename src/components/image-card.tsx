@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { getImageSize, wp } from "@/helpers/common";
 import { Image } from "expo-image";
-import { theme } from "@/constants/theme";
 import Animated from "react-native-reanimated";
+import { getImageSize, wp } from "../helpers/common";
+import { theme } from "../constants/theme";
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -18,9 +18,7 @@ const ImageCard = ({ item, index, columns, router }) => {
   return (
     <Pressable
       style={[styles.imageWrapper, !isLastInRow() && styles.spacing]}
-      onPress={() =>
-        router.push({ pathname: "home/image", params: { ...item } })
-      }
+      onPress={() => router.push({ pathname: `/detail/${item.id}` })}
     >
       <AnimatedImage
         style={[styles.image, imageHeight()]}
