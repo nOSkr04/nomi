@@ -11,7 +11,7 @@ export const unstable_settings = {
   initialRouteName: "home",
 };
 
-const HomeLayout = () => {
+const ContentLayout = () => {
   const dispatch = useDispatch();
   const { token } = useSelector((state: { auth: IAuth }) => state.auth);
   const { data } = useSWR<IUser>(
@@ -32,7 +32,7 @@ const HomeLayout = () => {
   );
 
   if (!data) {
-    return <Redirect href={"/(auth)"} />;
+    return <Redirect href={"/"} />;
   }
 
   return (
@@ -41,13 +41,12 @@ const HomeLayout = () => {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="/(home)/index" />
-      <Stack.Screen name="/(home)/content" />
+      <Stack.Screen name="/(home)/index" redirect={data?.role === "user"} />
     </Stack>
   );
 };
 
-export default HomeLayout;
+export default ContentLayout;
 
 const styles = StyleSheet.create({
   root: {
